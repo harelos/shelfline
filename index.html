@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F7F2E9">
+<title>Shelfline — Read more. Track less.</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;0,700;1,400&family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F7F2E9;--card:#FFFDF8;--line:#E4DACA;--ink:#1E1B16;--mut:#8A7F6E;--dim:#B3A892;--acc:#C96F4A;--green:#5E8C61}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--ink);font-family:'Fraunces',Georgia,serif;min-height:100vh;min-height:100dvh}
+.wrap{max-width:440px;margin:0 auto;padding:26px 20px 44px}
+.mono{font-family:'Space Mono',monospace;font-variant-numeric:tabular-nums}
+.eyebrow{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim)}
+h1{font-size:32px;font-weight:700;letter-spacing:-.02em;line-height:1.05}
+h1 em{font-style:italic;color:var(--acc);font-weight:400}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:0 2px 8px -6px rgba(30,27,22,.15)}
+.btn{display:block;width:100%;padding:14px;border:none;border-radius:10px;font-family:'Fraunces',serif;font-size:15px;font-weight:600;cursor:pointer}
+.btn:active{transform:scale(.985)}
+.btn-acc{background:var(--acc);color:#FFFDF8}
+.btn-ghost{background:transparent;border:1px solid var(--line);color:var(--mut);font-size:13px;padding:11px}
+input{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:12px 13px;color:var(--ink);font-family:'Fraunces',serif;font-size:15px;outline:none}
+input:focus{border-color:var(--acc)}
+label{display:block;font-family:system-ui,sans-serif;font-size:12px;color:var(--mut);margin:14px 0 6px;font-weight:500}
+.pbar{height:7px;background:var(--bg);border-radius:4px;overflow:hidden;border:1px solid var(--line)}
+.pfill{height:100%;background:var(--acc);border-radius:4px;transition:width .4s ease-out}
+@media (prefers-reduced-motion:reduce){.pfill{transition:none}}
+.chips{display:flex;gap:7px;margin-top:12px}
+.chip{flex:1;padding:11px 4px;background:var(--bg);border:1px solid var(--line);border-radius:9px;font-family:'Space Mono',monospace;font-size:13px;color:var(--ink);cursor:pointer;text-align:center}
+.chip:active{border-color:var(--acc);color:var(--acc)}
+.statgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:14px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:12px 6px;text-align:center}
+.stat b{font-family:'Space Mono',monospace;font-size:20px;color:var(--acc);display:block}
+.stat span{font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.13em;color:var(--dim);text-transform:uppercase}
+.fin{display:flex;justify-content:space-between;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+.fin:last-child{border:none}
+.toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 20px;border-radius:10px;font-family:'Space Mono',monospace;font-size:12px;z-index:200}
+.hidden{display:none!important}
+</style>
+<link rel="manifest" href="manifest.json">
+<script>if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js")</script>
+</head>
+<body>
+<div class="wrap">
+
+<div style="display:flex;justify-content:space-between;align-items:baseline">
+  <div class="eyebrow">SHELFLINE</div>
+  <div class="mono" style="font-size:11px;color:var(--acc)" id="streak">0 day streak</div>
+</div>
+<h1 style="margin:10px 0 18px">Read more.<br><em>Track less.</em></h1>
+
+<div id="current" class="hidden">
+  <div class="card">
+    <div class="eyebrow" style="color:var(--dim)">NOW READING</div>
+    <div style="font-size:21px;font-weight:600;margin:8px 0 2px" id="b-title"></div>
+    <div style="font-family:system-ui,sans-serif;font-size:13px;color:var(--mut)" id="b-author"></div>
+    <div style="display:flex;justify-content:space-between;margin:14px 0 6px;font-family:'Space Mono',monospace;font-size:11px;color:var(--mut)">
+      <span id="b-pages"></span><span id="b-pct"></span>
+    </div>
+    <div class="pbar"><div class="pfill" id="b-fill" style="width:0%"></div></div>
+    <div class="eyebrow" style="color:var(--dim);margin-top:16px">LOG PAGES READ</div>
+    <div class="chips">
+      <button class="chip" onclick="logPages(10)">+10</button>
+      <button class="chip" onclick="logPages(25)">+25</button>
+      <button class="chip" onclick="logPages(50)">+50</button>
+      <button class="chip" onclick="customPages()">···</button>
+    </div>
+  </div>
+  <div style="height:10px"></div>
+  <button class="btn btn-ghost" onclick="abandonBook()">Abandon this book</button>
+</div>
+
+<div id="nobook">
+  <div class="card" style="text-align:center;padding:26px 18px">
+    <div style="font-size:17px;font-style:italic;color:var(--mut)">No book open.</div>
+    <p style="font-family:system-ui,sans-serif;font-size:13px;color:var(--dim);margin:6px 0 16px">Add what you're reading and log pages with one tap.</p>
+    <button class="btn btn-acc" onclick="showAdd()">+ Start a book</button>
+  </div>
+</div>
+
+<div id="addbook" class="hidden">
+  <div class="card">
+    <div class="eyebrow" style="color:var(--dim)">NEW BOOK</div>
+    <label>Title</label><input id="n-title" placeholder="Atomic Habits">
+    <label>Author (optional)</label><input id="n-author" placeholder="James Clear">
+    <label>Total pages</label><input id="n-pages" type="number" inputmode="numeric" placeholder="320">
+    <div style="height:18px"></div>
+    <button class="btn btn-acc" onclick="addBook()">Open the book →</button>
+    <div style="height:8px"></div>
+    <button class="btn btn-ghost" onclick="hideAdd()">Cancel</button>
+  </div>
+</div>
+
+<div class="statgrid">
+  <div class="stat"><b id="st-books">0</b><span>finished</span></div>
+  <div class="stat"><b id="st-pages">0</b><span>pages total</span></div>
+  <div class="stat"><b id="st-avg">0</b><span>pg / day</span></div>
+</div>
+
+<div id="finwrap" class="hidden" style="margin-top:18px">
+  <div class="eyebrow" style="margin-bottom:6px">FINISHED THIS YEAR</div>
+  <div class="card" id="finished" style="padding:8px 16px"></div>
+</div>
+
+</div>
+<script>
+const store={m:{},get(k,d){try{const v=localStorage.getItem('sl_'+k);return v!==null?JSON.parse(v):d}catch(e){return k in this.m?this.m[k]:d}},set(k,v){try{localStorage.setItem('sl_'+k,JSON.stringify(v))}catch(e){this.m[k]=v}}};
+let S;
+function load(){
+  S=store.get('state',{current:null,finished:[],log:{},firstLog:null});
+  render();
+}
+function save(){store.set('state',S)}
+function today(){return new Date().toISOString().slice(0,10)}
+function render(){
+  const cur=S.current;
+  document.getElementById('current').classList.toggle('hidden',!cur);
+  document.getElementById('nobook').classList.toggle('hidden',!!cur);
+  document.getElementById('addbook').classList.add('hidden');
+  if(cur){
+    document.getElementById('b-title').textContent=cur.title;
+    document.getElementById('b-author').textContent=cur.author||'';
+    const pct=Math.min(100,Math.round(cur.read/cur.pages*100));
+    document.getElementById('b-pages').textContent=cur.read+' / '+cur.pages+' pages';
+    document.getElementById('b-pct').textContent=pct+'%';
+    document.getElementById('b-fill').style.width=pct+'%';
+  }
+  const totalPages=Object.values(S.log).reduce((a,b)=>a+b,0);
+  document.getElementById('st-books').textContent=S.finished.length;
+  document.getElementById('st-pages').textContent=totalPages;
+  const days=S.firstLog?Math.max(1,Math.ceil((Date.now()-new Date(S.firstLog))/86400000)):1;
+  document.getElementById('st-avg').textContent=Math.round(totalPages/days);
+  let streak=0,d=new Date();
+  if(!S.log[today()])d.setDate(d.getDate()-1);
+  while(S.log[d.toISOString().slice(0,10)]){streak++;d.setDate(d.getDate()-1)}
+  document.getElementById('streak').textContent=streak+' day streak';
+  const fw=document.getElementById('finwrap');
+  if(S.finished.length){fw.classList.remove('hidden');
+    document.getElementById('finished').innerHTML=S.finished.map(f=>`<div class="fin"><span>${esc(f.title)}</span><span class="mono" style="font-size:11px;color:var(--dim)">${f.date}</span></div>`).join('');
+  } else fw.classList.add('hidden');
+}
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function showAdd(){document.getElementById('nobook').classList.add('hidden');document.getElementById('addbook').classList.remove('hidden')}
+function hideAdd(){render()}
+function addBook(){
+  const t=document.getElementById('n-title').value.trim();
+  const p=parseInt(document.getElementById('n-pages').value);
+  if(!t||!p||p<1){toast('NEED TITLE + PAGES');return}
+  S.current={title:t,author:document.getElementById('n-author').value.trim(),pages:p,read:0};
+  save();render();
+  document.getElementById('n-title').value='';document.getElementById('n-author').value='';document.getElementById('n-pages').value='';
+}
+function logPages(n){
+  if(!S.current)return;
+  S.current.read=Math.min(S.current.pages,S.current.read+n);
+  const t=today();S.log[t]=(S.log[t]||0)+n;
+  if(!S.firstLog)S.firstLog=t;
+  if(S.current.read>=S.current.pages){
+    S.finished.unshift({title:S.current.title,date:new Date().toLocaleDateString(undefined,{month:'short',day:'numeric'})});
+    S.current=null;save();render();toast('BOOK FINISHED — #'+S.finished.length+' THIS YEAR');if(typeof GK!=='undefined')GK.win();
+  } else {save();render();toast('+'+n+' PAGES')}
+}
+function customPages(){
+  const n=parseInt(prompt('Pages read:'));
+  if(n&&n>0)logPages(n);
+}
+function abandonBook(){
+  if(!confirm('Abandon this book? Pages you logged still count toward your stats.'))return;
+  S.current=null;save();render();
+}
+function toast(msg){const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2000)}
+load();
+</script>
+<script>
+const GK_CONFIG={app:'Shelfline',pkg:'com.tigerbrands.shelfline',accent:'#C96F4A',bg:'#F7F2E9',ink:'#1E1B16',
+  onboard:[{h:'Read more. Track less.',p:'One-tap page logging, a streak that respects your life, and stats that build themselves. No social feed, ever.'},{h:'Start a book',p:'Title and total pages, that is all. Then tap +25 after each session and watch the shelf fill.'}],askAfterWins:1};
+const GK={
+  s:{get(k,d){try{const v=localStorage.getItem('gk_'+GK_CONFIG.app+'_'+k);return v!==null?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem('gk_'+GK_CONFIG.app+'_'+k,JSON.stringify(v))}catch(e){}}},
+  css(){const c=GK_CONFIG;const st=document.createElement('style');
+    st.textContent=`.gk-ov{position:fixed;inset:0;background:${c.bg}F2;z-index:900;display:flex;align-items:center;justify-content:center;padding:26px;backdrop-filter:blur(4px)}
+.gk-card{background:${c.bg};border:1px solid ${c.accent}66;border-radius:16px;padding:26px 22px;max-width:360px;width:100%;color:${c.ink};font-family:system-ui,sans-serif;box-shadow:0 20px 60px -20px rgba(0,0,0,.45)}
+.gk-h{font-size:21px;font-weight:700;margin-bottom:8px;line-height:1.15}
+.gk-p{font-size:14px;line-height:1.6;opacity:.75;margin-bottom:18px}
+.gk-btn{display:block;width:100%;padding:14px;border:none;border-radius:10px;background:${c.accent};color:${c.bg};font-size:15px;font-weight:700;cursor:pointer;font-family:system-ui,sans-serif}
+.gk-ghost{background:transparent;color:${c.ink};opacity:.55;border:none;width:100%;padding:12px;font-size:13px;cursor:pointer;font-family:system-ui,sans-serif}
+.gk-dots{display:flex;gap:6px;justify-content:center;margin-bottom:16px}
+.gk-dot{width:7px;height:7px;border-radius:50%;background:${c.ink};opacity:.25}
+.gk-dot.on{background:${c.accent};opacity:1}
+.gk-foot{text-align:center;padding:22px 0 6px;font-family:monospace;font-size:10.5px;letter-spacing:.08em}
+.gk-foot a{color:${c.accent};text-decoration:none;opacity:.85}`;
+    document.head.appendChild(st)},
+  onboard(){if(GK.s.get('onboarded',false))return;
+    let i=0;const ov=document.createElement('div');ov.className='gk-ov';
+    const render=()=>{const step=GK_CONFIG.onboard[i];
+      ov.innerHTML=`<div class="gk-card"><div class="gk-dots">${GK_CONFIG.onboard.map((_,j)=>`<div class="gk-dot ${j===i?'on':''}"></div>`).join('')}</div><div class="gk-h">${step.h}</div><div class="gk-p">${step.p}</div><button class="gk-btn" id="gk-next">${i<GK_CONFIG.onboard.length-1?'Next':"Let's go"}</button></div>`;
+      ov.querySelector('#gk-next').onclick=()=>{i++;if(i>=GK_CONFIG.onboard.length){GK.s.set('onboarded',true);ov.remove()}else render()}};
+    render();document.body.appendChild(ov)},
+  win(){const wins=GK.s.get('wins',0)+1;GK.s.set('wins',wins);
+    const state=GK.s.get('review','pending');
+    if(state==='done'||state==='never')return;
+    const threshold=state==='later'?GK.s.get('nextAsk',999):GK_CONFIG.askAfterWins;
+    if(wins>=threshold)setTimeout(()=>GK.gate(wins),900)},
+  gate(wins){const ov=document.createElement('div');ov.className='gk-ov';
+    ov.innerHTML=`<div class="gk-card"><div class="gk-h">Is ${GK_CONFIG.app} actually helping you?</div><div class="gk-p">Honest answer — it decides what I build next.</div><button class="gk-btn" id="gk-yes">Yes, it's working</button><button class="gk-ghost" id="gk-no">Not really</button></div>`;
+    document.body.appendChild(ov);
+    ov.querySelector('#gk-yes').onclick=()=>{
+      ov.querySelector('.gk-card').innerHTML=`<div class="gk-h">That's the goal 🤝</div><div class="gk-p">A 30-second review is what keeps a free, no-ads app alive on the Play Store. Would you leave one?</div><button class="gk-btn" id="gk-rate">Leave a review</button><button class="gk-ghost" id="gk-later">Maybe later</button>`;
+      ov.querySelector('#gk-rate').onclick=()=>{GK.s.set('review','done');window.open('market://details?id='+GK_CONFIG.pkg);ov.remove()};
+      ov.querySelector('#gk-later').onclick=()=>{const again=GK.s.get('review','pending')==='later';GK.s.set('review',again?'never':'later');GK.s.set('nextAsk',wins+10);ov.remove()}};
+    ov.querySelector('#gk-no').onclick=()=>{GK.s.set('review','never');
+      ov.querySelector('.gk-card').innerHTML=`<div class="gk-h">Tell me what's wrong.</div><div class="gk-p">I read every email and ship fixes fast. What's not working for you?</div><button class="gk-btn" id="gk-mail">Email the developer</button><button class="gk-ghost" id="gk-skip">Skip</button>`;
+      ov.querySelector('#gk-mail').onclick=()=>{GK.feedback('Something is not working for me');ov.remove()};
+      ov.querySelector('#gk-skip').onclick=()=>ov.remove()}},
+  feedback(subject){location.href='mailto:support@tigerbrandsglobal.com?subject='+encodeURIComponent('['+GK_CONFIG.app+'] '+(subject||'Feedback'))+'&body='+encodeURIComponent('App: '+GK_CONFIG.app+'\n\n')},
+  footer(){const f=document.createElement('div');f.className='gk-foot';
+    f.innerHTML=`<a href="#" onclick="GK.feedback();return false">FEEDBACK & IDEAS → SUPPORT@TIGERBRANDSGLOBAL.COM</a>`;
+    (document.querySelector('.wrap')||document.body).appendChild(f)},
+  offer(){},
+  init(){GK.css();GK.footer();GK.onboard()}
+};
+GK.init();
+</script>
+</body>
+</html>
