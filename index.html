@@ -143,7 +143,9 @@ function render(){
 function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
 function showAdd(){document.getElementById('nobook').classList.add('hidden');document.getElementById('addbook').classList.remove('hidden')}
 function hideAdd(){render()}
+const FREE_BOOK_LIMIT=5;
 function addBook(){
+  if(typeof Billing!=='undefined'&&!Billing.isPro()&&S.finished.length>=FREE_BOOK_LIMIT){Billing.requirePro('limit');return}
   const t=document.getElementById('n-title').value.trim();
   const p=parseInt(document.getElementById('n-pages').value);
   if(!t||!p||p<1){toast('NEED TITLE + PAGES');return}
@@ -221,5 +223,6 @@ const GK={
 };
 GK.init();
 </script>
+<script src="billing.js"></script>
 </body>
 </html>
